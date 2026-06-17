@@ -1,0 +1,68 @@
+{
+  "totalItem": 6,
+  "totalPage": 1,
+  "currentPage": 8,
+  "pageSize": null,
+  "data": [
+      {
+          "name": "HP 惠庙",
+          "code": "HP",
+          "no_of_license": 2,
+          "no_of_admin": 1,
+          "status": false,
+          "createdAt": "2022-08-10T16:24:30.188Z",
+          "updatedAt": "2022-08-10T16:24:30.188Z",
+          "id": "62f3dbbed3ba747938130f43"
+      },
+      {
+          "name": "IBM international",
+          "code": "IBM",
+          "no_of_license": 2,
+          "no_of_admin": 1,
+          "status": false,
+          "createdAt": "2022-08-10T16:28:36.878Z",
+          "updatedAt": "2022-08-10T16:28:36.878Z",
+          "id": "62f3dcb4d3ba747938130f45"
+      },
+      {
+          "name": "Boc 香港",
+          "code": "BOCHK",
+          "no_of_license": 2,
+          "no_of_admin": 1,
+          "status": false,
+          "createdAt": "2022-08-10T16:28:42.314Z",
+          "updatedAt": "2022-08-10T16:28:42.314Z",
+          "id": "62f3dcbad3ba747938130f47"
+      },
+      {
+          "name": "Food Panda HK limited",
+          "code": "FP",
+          "no_of_license": 2,
+          "no_of_admin": 1,
+          "status": false,
+          "createdAt": "2022-08-10T16:28:43.247Z",
+          "updatedAt": "2022-08-10T16:28:43.247Z",
+          "id": "62f3dcbbd3ba747938130f49"
+      },
+      {
+          "name": "Uber Eat Hk Limited",
+          "code": "UBER",
+          "no_of_license": 2,
+          "no_of_admin": 1,
+          "status": false,
+          "createdAt": "2022-08-10T16:28:44.397Z",
+          "updatedAt": "2022-08-10T16:28:44.397Z",
+          "id": "62f3dcbcd3ba747938130f4b"
+      },
+      {
+          "name": "MicroSoft Hk Limited",
+          "code": "MICRO",
+          "no_of_license": 2,
+          "no_of_admin": 1,
+          "status": false,
+          "createdAt": "2022-08-10T16:28:45.215Z",
+          "updatedAt": "2022-08-10T16:28:45.215Z",
+          "id": "62f3dcbdd3ba747938130f4d"
+      }
+  ]
+}
