@@ -2,14 +2,18 @@ import React, { Suspense } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 
 const Checkrecords = React.lazy(() =>
+  
   import(/* webpackChunkName: "checkrecords" */ './checkrecords')
 );
+
 const Checkin   = React.lazy(() =>
   import(/* webpackChunkName: "checkin" */ './checkin')
 );
+
 const Checkout = React.lazy(() =>
   import(/* webpackChunkName: "checkout" */ './checkout')
 );
+
 const Check = ({ match }) => (
   <Suspense fallback={<div className="loading" />}>
     <Switch>

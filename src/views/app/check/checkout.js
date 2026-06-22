@@ -8,22 +8,6 @@ const Checkout = () => {
   const [msg, setMsg] = useState(null)
   const [isError, setIsError] = useState(false)
 
-  useEffect(() => {
-    if (!scanning) return
-
-    const reader = new BrowserMultiFormatReader()
-    reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
-      if (result) {
-        handleScan(result.text)
-        setScanning(false)
-      }
-    })
-
-    return () => {
-      reader.reset()
-    }
-  }, [scanning])
-
   const handleScan = async (staffId) => {
     try {
       const scanDate = new Date()
@@ -39,6 +23,26 @@ const Checkout = () => {
       console.error(err)
     }
   }
+
+  useEffect(() => {
+    let reader = null
+
+    if (scanning) {
+      reader = new BrowserMultiFormatReader()
+      reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+        if (result) {
+          handleScan(result.text)
+          setScanning(false)
+        }
+      })
+    }
+
+    return () => {
+      if (reader) {
+        reader.reset()
+      }
+    }
+  }, [scanning])
 
   return (
     <div className="container-fluid">
@@ -61,6 +65,7 @@ const Checkout = () => {
                     className="w-100"
                     playsInline
                     autoPlay
+                    muted
                   />
                 </div>
               )}
@@ -72,6 +77,7 @@ const Checkout = () => {
               )}
 
               <button
+                type="button"
                 className="btn btn-danger mt-2"
                 onClick={() => {
                   setMsg(null)

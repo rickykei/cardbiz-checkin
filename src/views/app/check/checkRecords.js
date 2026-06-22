@@ -54,8 +54,11 @@ const Checkrecords = () => {
                 {records.checkins.length === 0 ? (
                   <p className="text-muted">No records</p>
                 ) : (
-                  records.checkins.map((item, idx) => (
-                    <div key={idx} className="mb-2 pb-2 border-bottom">
+                  records.checkins.map((item) => (
+                    <div 
+                      key={`checkin-${item.staffId}-${item.scanDate}`} 
+                      className="mb-2 pb-2 border-bottom"
+                    >
                       <strong>{item.staffId}</strong>
                       <br />
                       <small className="text-muted">
@@ -80,8 +83,11 @@ const Checkrecords = () => {
                 {records.checkouts.length === 0 ? (
                   <p className="text-muted">No records</p>
                 ) : (
-                  records.checkouts.map((item, idx) => (
-                    <div key={idx} className="mb-2 pb-2 border-bottom">
+                  records.checkouts.map((item) => (
+                    <div 
+                      key={`checkout-${item.staffId}-${item.scanDate}`} 
+                      className="mb-2 pb-2 border-bottom"
+                    >
                       <strong>{item.staffId}</strong>
                       <br />
                       <small className="text-muted">
