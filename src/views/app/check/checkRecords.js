@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 
-
 const Checkrecords = () => {
   const [records, setRecords] = useState({
     checkins: [],
     checkouts: []
   })
 
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
-    const getRecords = async () => {
+    const fetchRecords = async () => {
       try {
-        const res = await request.get('/api/checkin/records')
+        const res = await axios.get('/api/checkin/records')
         setRecords(res.data)
       } catch (err) {
-        console.log(err)
+        console.error(err)
+      } finally {
+        setLoading(false)
       }
     }
-    getRecords()
+
+    fetchRecords()
   }, [])
 
   return (
@@ -30,41 +34,67 @@ const Checkrecords = () => {
         </div>
       </div>
 
-      <div className="row">
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header">
-              <h5>Check In</h5>
-            </div>
-            <div className="card-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              {records.checkins.map((item, idx) => (
-                <div key={idx} className="mb-2 pb-2 border-bottom">
-                  <strong>{item.staffId}</strong>
-                  <br />
-                  {new Date(item.scanDate).toLocaleString()}
-                </div>
-              ))}
-            </div>
+      {loading ? (
+        <div className="text-center my-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
         </div>
+      ) : (
+        <div className="row">
+          <div className="col-md-6">
+            <div className="card">
+              <div className="card-header">
+                <h5 className="mb-0">Check In</h5>
+              </div>
+              <div
+                className="card-body"
+                style={{ maxHeight: '60vh', overflowY: 'auto' }}
+              >
+                {records.checkins.length === 0 ? (
+                  <p className="text-muted">No records</p>
+                ) : (
+                  records.checkins.map((item, idx) => (
+                    <div key={idx} className="mb-2 pb-2 border-bottom">
+                      <strong>{item.staffId}</strong>
+                      <br />
+                      <small className="text-muted">
+                        {new Date(item.scanDate).toLocaleString()}
+                      </small>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
 
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header">
-              <h5>Check Out</h5>
-            </div>
-            <div className="card-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              {records.checkouts.map((item, idx) => (
-                <div key={idx} className="mb-2 pb-2 border-bottom">
-                  <strong>{item.staffId}</strong>
-                  <br />
-                  {new Date(item.scanDate).toLocaleString()}
-                </div>
-              ))}
+          <div className="col-md-6">
+            <div className="card">
+              <div className="card-header">
+                <h5 className="mb-0">Check Out</h5>
+              </div>
+              <div
+                className="card-body"
+                style={{ maxHeight: '60vh', overflowY: 'auto' }}
+              >
+                {records.checkouts.length === 0 ? (
+                  <p className="text-muted">No records</p>
+                ) : (
+                  records.checkouts.map((item, idx) => (
+                    <div key={idx} className="mb-2 pb-2 border-bottom">
+                      <strong>{item.staffId}</strong>
+                      <br />
+                      <small className="text-muted">
+                        {new Date(item.scanDate).toLocaleString()}
+                      </small>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -1,67 +1,85 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { BrowserMultiFormatReader } from '@zxing/library'
 
-
-const Checkrecords = () => {
-  const [records, setRecords] = useState({
-    checkins: [],
-    checkouts: []
-  })
+const Checkout = () => {
+  const videoRef = useRef(null)
+  const [scanning, setScanning] = useState(true)
+  const [msg, setMsg] = useState(null)
+  const [isError, setIsError] = useState(false)
 
   useEffect(() => {
-    const getRecords = async () => {
-      try {
-        const res = await request.get('/api/checkin/records')
-        setRecords(res.data)
-      } catch (err) {
-        console.log(err)
+    if (!scanning) return
+
+    const reader = new BrowserMultiFormatReader()
+    reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+      if (result) {
+        handleScan(result.text)
+        setScanning(false)
       }
+    })
+
+    return () => {
+      reader.reset()
     }
-    getRecords()
-  }, [])
+  }, [scanning])
+
+  const handleScan = async (staffId) => {
+    try {
+      const scanDate = new Date()
+      await axios.post('/api/checkin/out', {
+        staffId,
+        scanDate
+      })
+      setMsg('Check Out success')
+      setIsError(false)
+    } catch (err) {
+      setMsg('Check Out failed')
+      setIsError(true)
+      console.error(err)
+    }
+  }
 
   return (
     <div className="container-fluid">
       <div className="row">
         <div className="col-12">
           <div className="page-title-box">
-            <h4 className="page-title">Check Records</h4>
+            <h4 className="page-title">Check Out</h4>
           </div>
         </div>
       </div>
 
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-md-6 offset-md-3">
           <div className="card">
-            <div className="card-header">
-              <h5>Check In</h5>
-            </div>
-            <div className="card-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              {records.checkins.map((item, idx) => (
-                <div key={idx} className="mb-2 pb-2 border-bottom">
-                  <strong>{item.staffId}</strong>
-                  <br />
-                  {new Date(item.scanDate).toLocaleString()}
+            <div className="card-body">
+              {scanning && (
+                <div className="bg-dark p-1 border rounded mb-3">
+                  <video
+                    ref={videoRef}
+                    className="w-100"
+                    playsInline
+                    autoPlay
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+              )}
 
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header">
-              <h5>Check Out</h5>
-            </div>
-            <div className="card-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              {records.checkouts.map((item, idx) => (
-                <div key={idx} className="mb-2 pb-2 border-bottom">
-                  <strong>{item.staffId}</strong>
-                  <br />
-                  {new Date(item.scanDate).toLocaleString()}
+              {msg && (
+                <div className={`alert ${isError ? 'alert-danger' : 'alert-success'}`}>
+                  {msg}
                 </div>
-              ))}
+              )}
+
+              <button
+                className="btn btn-danger mt-2"
+                onClick={() => {
+                  setMsg(null)
+                  setScanning(true)
+                }}
+              >
+                Scan Again
+              </button>
             </div>
           </div>
         </div>
@@ -70,4 +88,4 @@ const Checkrecords = () => {
   )
 }
 
-export default Checkrecords
+export default Checkout

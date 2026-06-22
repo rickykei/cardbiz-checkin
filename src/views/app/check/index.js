@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 import { Redirect, Route, Switch } from 'react-router-dom';
 
-const CheckRecords = React.lazy(() =>
-  import(/* webpackChunkName: "checkrecords" */ './checkRecords')
+const Checkrecords = React.lazy(() =>
+  import(/* webpackChunkName: "checkrecords" */ './checkrecords')
 );
 const Checkin   = React.lazy(() =>
   import(/* webpackChunkName: "checkin" */ './checkin')
@@ -16,7 +16,7 @@ const Check = ({ match }) => (
       <Redirect exact from={`${match.url}/`} to={`${match.url}/checkrecords`} />
       <Route
         path={`${match.url}/checkrecords`}
-        render={(props) => <CheckRecords {...props} />}
+        render={(props) => <Checkrecords {...props} />}
       />
       <Route
         path={`${match.url}/checkin`}

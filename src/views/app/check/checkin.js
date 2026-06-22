@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { BrowserMultiFormatReader } from '@zxing/library'
 
-const Checkout = () => {
+const Checkin = () => {
   const videoRef = useRef(null)
   const [scanning, setScanning] = useState(true)
   const [msg, setMsg] = useState(null)
@@ -12,25 +12,31 @@ const Checkout = () => {
     if (!scanning) return
 
     const reader = new BrowserMultiFormatReader()
-    reader.decodeFromVideoDevice(undefined, videoRef.current, (res) => {
-      if (res) {
-        handleScan(res.text)
+    reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+      if (result) {
+        handleScan(result.text)
         setScanning(false)
       }
     })
 
-    return () => reader.reset()
+    return () => {
+      reader.reset()
+    }
   }, [scanning])
 
   const handleScan = async (staffId) => {
     try {
       const scanDate = new Date()
-      await request.post('/api/checkin/out', { staffId, scanDate })
-      setMsg('Check Out success')
+      await axios.post('/api/checkin/in', {
+        staffId,
+        scanDate
+      })
+      setMsg('Check In success')
       setIsError(false)
     } catch (err) {
-      setMsg('Check Out failed')
+      setMsg('Check In failed')
       setIsError(true)
+      console.error(err)
     }
   }
 
@@ -39,7 +45,7 @@ const Checkout = () => {
       <div className="row">
         <div className="col-12">
           <div className="page-title-box">
-            <h4 className="page-title">Check Out</h4>
+            <h4 className="page-title">Check In</h4>
           </div>
         </div>
       </div>
@@ -50,7 +56,12 @@ const Checkout = () => {
             <div className="card-body">
               {scanning && (
                 <div className="bg-dark p-1 border rounded mb-3">
-                  <video ref={videoRef} className="w-100" playsInline autoPlay />
+                  <video
+                    ref={videoRef}
+                    className="w-100"
+                    playsInline
+                    autoPlay
+                  />
                 </div>
               )}
 
@@ -61,7 +72,7 @@ const Checkout = () => {
               )}
 
               <button
-                className="btn btn-danger"
+                className="btn btn-primary mt-2"
                 onClick={() => {
                   setMsg(null)
                   setScanning(true)
@@ -77,4 +88,4 @@ const Checkout = () => {
   )
 }
 
-export default Checkout
+export default Checkin
