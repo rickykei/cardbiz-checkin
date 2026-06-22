@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import request from '../../../utils/request'
+import axios from 'axios'
 import { BrowserMultiFormatReader } from '@zxing/library'
 
 const Checkout = () => {

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import request from '../../../utils/request'
+import axios from 'axios'
+import { BrowserMultiFormatReader } from '@zxing/library'
+
 
 const Checkrecords = () => {
   const [records, setRecords] = useState({

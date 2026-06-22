@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import request from '../../../utils/request'
+import axios from 'axios'
+
 
 const Checkrecords = () => {
   const [records, setRecords] = useState({
