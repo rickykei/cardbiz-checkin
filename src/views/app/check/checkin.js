@@ -11,17 +11,17 @@ const Checkin = () => {
   const [qrContent, setQrContent] = useState('')
   const isProcessing = useRef(false)
 
-  const handleScan = useCallback(async (staffId) => {
+  const handleScan = useCallback(async (resultText) => {
     if (isProcessing.current) return
     isProcessing.current = true
 
     try {
       const scanDate = new Date()
       await axios.post('/api/checkin/in', {
-        staffId,
+        staffId: resultText,
         scanDate
       })
-      setMsg(`Check In success，員工編號：${staffId}`)
+      setMsg(`Check In success：${resultText}`)
       setIsError(false)
     } catch (err) {
       setMsg('Check In failed')
@@ -35,19 +35,20 @@ const Checkin = () => {
   }, [])
 
   useEffect(() => {
-    if (!scanning) return
+    let reader = null
 
-    const reader = new BrowserMultiFormatReader()
-    readerRef.current = reader
+    if (scanning) {
+      reader = new BrowserMultiFormatReader()
+      readerRef.current = reader
 
-    reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
-      if (result) {
-        const resultText = result.text
-        // 實時更新QR內容（URL/文字）
-        setQrContent(resultText)
-        handleScan(resultText)
-      }
-    })
+      reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+        if (result) {
+          const { text } = result
+          setQrContent(text)
+          handleScan(text)
+        }
+      })
+    }
 
     return () => {
       if (readerRef.current) {
@@ -90,11 +91,10 @@ const Checkin = () => {
                 </div>
               )}
 
-              {/* 顯示QR Code內的URL/文字內容 */}
               {qrContent && (
                 <div className="alert alert-info mb-3">
                   <strong>QR Code 內容：</strong>
-                  <p className="mb-0 mt-1 break-all">{qrContent}</p>
+                  <p className="mb-0 mt-1 text-break">{qrContent}</p>
                 </div>
               )}
 
