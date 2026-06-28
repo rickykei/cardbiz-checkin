@@ -1,32 +1,46 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import axios from 'axios'
 import { BrowserMultiFormatReader } from '@zxing/library'
+import * as CryptoJS from 'crypto-js';
+
+// 專用解密：直接解你呢組
+// U2FsdGVkX18TI5NhBcqK3wH/JdD65NHAZm59F1ju67NUoJr9/w3TL1Ep/mqixlTC
+// → 6a15a72fe5b50d06026cc54d
+function decrypt(text, secretKey) {
+  const decrypted = CryptoJS.AES.decrypt(text,secretKey ,{
+   mode: CryptoJS.mode.CBC,
+   padding: CryptoJS.pad.Pkcs7
+ }).toString();
+ return decrypted;
+} 
 
 const Checkin = () => {
   const videoRef = useRef(null)
   const readerRef = useRef(null)
+
   const [scanning, setScanning] = useState(true)
   const [msg, setMsg] = useState(null)
   const [isError, setIsError] = useState(false)
-  const [qrContent, setQrContent] = useState('')
+  const [fullQrUrl, setFullQrUrl] = useState('')
+  const [encryptKey, setEncryptKey] = useState('')
+  const [staffId, setStaffId] = useState('')
+
   const isProcessing = useRef(false)
 
-  const handleScan = useCallback(async (resultText) => {
-    if (isProcessing.current) return
+  const handleScan = useCallback(async (id) => {
+    if (isProcessing.current || !id) return
     isProcessing.current = true
 
     try {
-      const scanDate = new Date()
       await axios.post('/api/checkin/in', {
-        staffId: resultText,
-        scanDate
+        staffId: id,
+        scanDate: new Date()
       })
-      setMsg(`Check In success：${resultText}`)
+      setMsg(`Check In 成功：${id}`)
       setIsError(false)
     } catch (err) {
-      setMsg('Check In failed')
+      setMsg('打卡失敗')
       setIsError(true)
-      console.error(err)
     }
 
     setTimeout(() => {
@@ -37,15 +51,28 @@ const Checkin = () => {
   useEffect(() => {
     let reader = null
 
-    if (scanning) {
+    if (navigator.mediaDevices && scanning) {
       reader = new BrowserMultiFormatReader()
       readerRef.current = reader
 
       reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
         if (result) {
           const { text } = result
-          setQrContent(text)
-          handleScan(text)
+          setFullQrUrl(text)
+
+          const query = text.split('?')[1] ?? ''
+          const params = new URLSearchParams(query)
+          const key = params.get('key') ?? ''
+          setEncryptKey(key)
+
+          if (key) {
+            const decryptedId =encodeURIComponent(decrypt(key,'12345678123456781234567812345678'))
+            console.log('解密結果：', decryptedId)
+            setStaffId(decryptedId)
+            if (decryptedId) {
+              handleScan(decryptedId)
+            }
+          }
         }
       })
     }
@@ -60,7 +87,9 @@ const Checkin = () => {
   const resetScan = () => {
     setMsg(null)
     setIsError(false)
-    setQrContent('')
+    setFullQrUrl('')
+    setEncryptKey('')
+    setStaffId('')
     isProcessing.current = false
     setScanning(true)
   }
@@ -91,10 +120,13 @@ const Checkin = () => {
                 </div>
               )}
 
-              {qrContent && (
+              {fullQrUrl && (
                 <div className="alert alert-info mb-3">
-                  <strong>QR Code 內容：</strong>
-                  <p className="mb-0 mt-1 text-break">{qrContent}</p>
+                  <div>URL：{fullQrUrl}</div>
+                  <div>加密 Key：{encryptKey}</div>
+                  <div className="fw-bold text-success">
+                    員工編號：{staffId}
+                  </div>
                 </div>
               )}
 
@@ -104,11 +136,7 @@ const Checkin = () => {
                 </div>
               )}
 
-              <button
-                type="button"
-                className="btn btn-primary mt-2"
-                onClick={resetScan}
-              >
+              <button type="button" className="btn btn-primary" onClick={resetScan}>
                 Scan Again
               </button>
             </div>
