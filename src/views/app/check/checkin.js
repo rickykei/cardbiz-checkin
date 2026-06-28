@@ -2,6 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import axios from 'axios'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import CryptoJS from 'crypto-js'
+import { servicePath2 } from 'constants/defaultValues'
+import IntlMessages from 'helpers/IntlMessages';
+import { injectIntl } from 'react-intl';
+import { connect } from 'react-redux';
 
 function AES_DECRYPT(encryptedText) {
   try {
@@ -20,10 +24,10 @@ function AES_DECRYPT(encryptedText) {
   }
 }
 
-const Checkin = () => {
+const Checkin = ({ intl, match,currentUser}) => {
   const videoRef = useRef(null)
   const readerRef = useRef(null)
-
+  const { messages } = intl; 
   const [scanning, setScanning] = useState(true)
   const [msg, setMsg] = useState(null)
   const [isError, setIsError] = useState(false)
@@ -32,68 +36,69 @@ const Checkin = () => {
   const [staffId, setStaffId] = useState('')
 
   const isProcessing = useRef(false)
+  const apiUrl = `${servicePath2}/checkin/in`
 
-  // 確保 handleScan 內部所有路徑都沒有任何 return 回傳值
   const handleScan = useCallback(async (id) => {
-    if (id) {
-      try {
-        await axios.post('/api/checkin/in', {
-          staffId: id,
-          scanDate: new Date()
-        })
-        setMsg(`Check In 成功：${id}`)
-        setIsError(false)
-      } catch (err) {
-        setMsg('打卡失敗')
-        setIsError(true)
-        isProcessing.current = false // 打卡失敗時解鎖，允許重新嘗試
-      }
+    if (!id) return
+
+    try {
+      const token = localStorage.getItem('token')
+
+      const res = await axios.post(apiUrl, {
+        staffId: id,
+        companyId: currentUser.companyId,
+        scanDate: new Date()
+      }, {
+        headers: {
+          token
+        }
+      })
+
+      setMsg(res.data?.message || `Check In 成功：${id}`)
+      setIsError(false)
+    } catch (err) {
+      console.error('打卡失敗', err.response?.data)
+      setMsg(err.response?.data?.message || '打卡失敗')
+      setIsError(true)
+      isProcessing.current = false
     }
-  }, [])
+  }, [apiUrl])
 
   useEffect(() => {
-    if (!scanning) {
-      return undefined // 明確回傳 undefined，與底下的清除函式 return 保持一致的 return 結構
-    }
+    if (!scanning) return undefined
 
     const reader = new BrowserMultiFormatReader()
     readerRef.current = reader
 
     reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
-      // Callback 內部完全不用 return 做流程控制，改用 if 巢狀判斷
-      if (!isProcessing.current && result) {
-        const { text } = result
-        
-        try {
-          const url = new URL(text)
-          const key = url.searchParams.get('key') || ''
-          
-          if (key) {
-            isProcessing.current = true // 鎖定狀態，避免重複觸發
-            setFullQrUrl(text)
-            setEncryptKey(key)
+      if (isProcessing.current || !result) return
 
-            const decryptedId = AES_DECRYPT(key)
-            setStaffId(decryptedId)
+      const { text } = result
+      try {
+        const url = new URL(text)
+        const key = url.searchParams.get('key')
+        if (!key) return
 
-            if (decryptedId) {
-              handleScan(decryptedId)
-            } else {
-              setMsg('無效的員工代碼（解密失敗）')
-              setIsError(true)
-              isProcessing.current = false // 解密失敗就解鎖
-            }
-          }
-        } catch (urlError) {
-          console.warn('掃描到的內容不是合法的 URL:', text)
+        isProcessing.current = true
+        setFullQrUrl(text)
+        setEncryptKey(key)
+
+        const decryptedId = AES_DECRYPT(key)
+        setStaffId(decryptedId)
+
+        if (decryptedId) {
+          handleScan(decryptedId)
+        } else {
+          setMsg('無效員工編號')
+          setIsError(true)
+          isProcessing.current = false
         }
+      } catch (e) {
+        console.warn('無效 QR Code', text)
       }
     })
 
-    // useEffect 最終回傳清除函式
-    return () => {
-      reader.reset()
-    }
+    return () => reader.reset()
   }, [scanning, handleScan])
 
   const resetScan = () => {
@@ -107,11 +112,11 @@ const Checkin = () => {
   }
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid"  match={match}>
       <div className="row">
         <div className="col-12">
           <div className="page-title-box">
-            <h4 className="page-title">Check In</h4>
+            <h4 className="page-title"><IntlMessages id="pages.checkin" />Check IN</h4>
           </div>
         </div>
       </div>
@@ -130,7 +135,7 @@ const Checkin = () => {
 
               {fullQrUrl && (
                 <div className="alert alert-info mb-3">
-                  <div>URL：{fullQrUrl}</div>
+                  <div>{messages['forms.checkin-URL：']} URL：{fullQrUrl}</div>
                   <div>加密 Key：{encryptKey}</div>
                   <div className="fw-bold text-success">
                     員工編號：{staffId || '解密失敗'}
@@ -153,6 +158,13 @@ const Checkin = () => {
       </div>
     </div>
   )
-}
-
-export default Checkin
+} 
+const mapStateToProps = ({  authUser }) => {
+   
+  const { currentUser } = authUser;
+  return {
+    
+    currentUser
+  };
+};
+export default injectIntl(connect(mapStateToProps)(Checkin));

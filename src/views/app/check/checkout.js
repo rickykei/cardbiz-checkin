@@ -1,55 +1,122 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import axios from 'axios'
 import { BrowserMultiFormatReader } from '@zxing/library'
+import CryptoJS from 'crypto-js'
+import { servicePath2 } from 'constants/defaultValues'
+import IntlMessages from 'helpers/IntlMessages';
+import { injectIntl } from 'react-intl';
+import { connect } from 'react-redux';
 
-const Checkout = () => {
+function AES_DECRYPT(encryptedText) {
+  try {
+    const bytes = CryptoJS.AES.decrypt(
+      encryptedText,
+      '12345678123456781234567812345678',
+      {
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      }
+    )
+    return bytes.toString(CryptoJS.enc.Utf8)
+  } catch (e) {
+    console.error('解密失敗', e)
+    return ''
+  }
+}
+
+const Checkout = ({ intl, match, currentUser }) => {
   const videoRef = useRef(null)
+  const readerRef = useRef(null)
+  const { messages } = intl;
   const [scanning, setScanning] = useState(true)
   const [msg, setMsg] = useState(null)
   const [isError, setIsError] = useState(false)
+  const [fullQrUrl, setFullQrUrl] = useState('')
+  const [encryptKey, setEncryptKey] = useState('')
+  const [staffId, setStaffId] = useState('')
 
-  const handleScan = async (staffId) => {
+  const isProcessing = useRef(false)
+  const apiUrl = `${servicePath2}/checkin/out`
+
+  const handleScan = useCallback(async (id) => {
+    if (!id) return
+
     try {
-      const scanDate = new Date()
-      await axios.post('/api/checkin/out', {
-        staffId,
-        scanDate
-      })
-      setMsg('Check Out success')
-      setIsError(false)
-    } catch (err) {
-      setMsg('Check Out failed')
-      setIsError(true)
-      console.error(err)
-    }
-  }
+      const token = localStorage.getItem('token')
 
-  useEffect(() => {
-    let reader = null
-
-    if (scanning) {
-      reader = new BrowserMultiFormatReader()
-      reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
-        if (result) {
-          handleScan(result.text)
-          setScanning(false)
+      const res = await axios.post(apiUrl, {
+        staffId: id,
+        companyId: currentUser.companyId,
+        scanDate: new Date()
+      }, {
+        headers: {
+          token
         }
       })
-    }
 
-    return () => {
-      if (reader) {
-        reader.reset()
-      }
+      setMsg(res.data?.message || `Check Out 成功：${id}`)
+      setIsError(false)
+    } catch (err) {
+      console.error('簽退失敗', err.response?.data)
+      setMsg(err.response?.data?.message || '簽退失敗')
+      setIsError(true)
+      isProcessing.current = false
     }
-  }, [scanning])
+  }, [apiUrl, currentUser.companyId])
+
+  useEffect(() => {
+    if (!scanning) return undefined
+
+    const reader = new BrowserMultiFormatReader()
+    readerRef.current = reader
+
+    reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+      if (isProcessing.current || !result) return
+
+      const { text } = result
+      try {
+        const url = new URL(text)
+        const key = url.searchParams.get('key')
+        if (!key) return
+
+        isProcessing.current = true
+        setFullQrUrl(text)
+        setEncryptKey(key)
+
+        const decryptedId = AES_DECRYPT(key)
+        setStaffId(decryptedId)
+
+        if (decryptedId) {
+          handleScan(decryptedId)
+        } else {
+          setMsg('無效員工編號')
+          setIsError(true)
+          isProcessing.current = false
+        }
+      } catch (e) {
+        console.warn('無效 QR Code', text)
+      }
+    })
+
+    return () => reader.reset()
+  }, [scanning, handleScan])
+
+  const resetScan = () => {
+    setMsg(null)
+    setIsError(false)
+    setFullQrUrl('')
+    setEncryptKey('')
+    setStaffId('')
+    isProcessing.current = false
+    setScanning(true)
+  }
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid" match={match}>
       <div className="row">
         <div className="col-12">
           <div className="page-title-box">
-            <h4 className="page-title">Check Out</h4>
+            <h4 className="page-title"><IntlMessages id="pages.checkout" />Check OUT</h4>
           </div>
         </div>
       </div>
@@ -58,15 +125,21 @@ const Checkout = () => {
         <div className="col-md-6 offset-md-3">
           <div className="card">
             <div className="card-body">
-              {scanning && (
-                <div className="bg-dark p-1 border rounded mb-3">
-                  <video
-                    ref={videoRef}
-                    className="w-100"
-                    playsInline
-                    autoPlay
-                    muted
-                  />
+              <video
+                ref={videoRef}
+                className="w-100"
+                playsInline
+                autoPlay
+                muted
+              />
+
+              {fullQrUrl && (
+                <div className="alert alert-info mb-3">
+                  <div>{messages['forms.checkout-URL：']} URL：{fullQrUrl}</div>
+                  <div>加密 Key：{encryptKey}</div>
+                  <div className="fw-bold text-success">
+                    員工編號：{staffId || '解密失敗'}
+                  </div>
                 </div>
               )}
 
@@ -76,15 +149,8 @@ const Checkout = () => {
                 </div>
               )}
 
-              <button
-                type="button"
-                className="btn btn-danger mt-2"
-                onClick={() => {
-                  setMsg(null)
-                  setScanning(true)
-                }}
-              >
-                Scan Again
+              <button type="button" className="btn btn-primary" onClick={resetScan}>
+                重新掃描
               </button>
             </div>
           </div>
@@ -94,4 +160,11 @@ const Checkout = () => {
   )
 }
 
-export default Checkout
+const mapStateToProps = ({ authUser }) => {
+  const { currentUser } = authUser;
+  return {
+    currentUser
+  };
+};
+
+export default injectIntl(connect(mapStateToProps)(Checkout));
