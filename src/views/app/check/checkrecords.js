@@ -1,108 +1,124 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { servicePath2 } from 'constants/defaultValues';
+import IntlMessages from 'helpers/IntlMessages';
+import { injectIntl } from 'react-intl';
+import { connect } from 'react-redux';
 
-const Checkrecords = () => {
-  const [records, setRecords] = useState({
-    checkins: [],
-    checkouts: []
-  })
+const CheckRecord = ({ currentUser, intl }) => {
+  const { messages } = intl;
+  const [checkins, setCheckins] = useState([]);
+  const [checkouts, setCheckouts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [loading, setLoading] = useState(true)
+  const fetchRecords = async () => {
+    if (!currentUser?.companyId) return;
+
+    try {
+      const res = await axios.post(`${servicePath2}/checkin/records`, {
+        companyId: currentUser.companyId
+      });
+
+      setCheckins(res.data.checkins || []);
+      setCheckouts(res.data.checkouts || []);
+    } catch (err) {
+      console.error('載入記錄失敗', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const res = await axios.get('/api/checkin/records')
-        setRecords(res.data)
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchRecords()
-  }, [])
+    fetchRecords();
+  }, [currentUser]);
 
   return (
     <div className="container-fluid">
       <div className="row">
         <div className="col-12">
           <div className="page-title-box">
-            <h4 className="page-title">Check Records</h4>
+            <h4 className="page-title">
+              <IntlMessages id="pages.checkrecord" /> 打卡記錄
+            </h4>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center my-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
+        <div className="text-center">載入中...</div>
       ) : (
         <div className="row">
           <div className="col-md-6">
-            <div className="card">
-              <div className="card-header">
-                <h5 className="mb-0">Check In</h5>
+            <div className="card mb-4">
+              <div className="card-header bg-primary text-white">
+                <h5 className="mb-0">{messages['forms.checkin-records']} - Check IN</h5>
               </div>
-              <div
-                className="card-body"
-                style={{ maxHeight: '60vh', overflowY: 'auto' }}
-              >
-                {records.checkins.length === 0 ? (
-                  <p className="text-muted">No records</p>
-                ) : (
-                  records.checkins.map((item) => (
-                    <div 
-                      key={`checkin-${item.staffId}-${item.scanDate}`} 
-                      className="mb-2 pb-2 border-bottom"
-                    >
-                      <strong>{item.staffId}</strong>
-                      <br />
-                      <small className="text-muted">
-                        {new Date(item.scanDate).toLocaleString()}
-                      </small>
-                    </div>
-                  ))
-                )}
+              <div className="card-body p-0">
+                <div className="list-group">
+                  {checkins.length === 0 ? (
+                    <div className="list-group-item">無記錄</div>
+                  ) : (
+                    checkins.map((item) => (
+                      <div key={item.id} className="list-group-item">
+                        <div className="d-flex justify-content-between">
+                          <div>
+                            <strong>
+                              {item.staff_id?.fname} {item.staff_id?.lname}
+                            </strong>
+                            <br />
+                            <small className="text-muted">ID: {item.staff_id?.id}</small>
+                          </div>
+                          <small className="text-muted">
+                            {new Date(item.createdAt).toLocaleString()}
+                          </small>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="col-md-6">
             <div className="card">
-              <div className="card-header">
-                <h5 className="mb-0">Check Out</h5>
+              <div className="card-header bg-warning text-dark">
+                <h5 className="mb-0">{messages['forms.checkout-records']} - Check OUT</h5>
               </div>
-              <div
-                className="card-body"
-                style={{ maxHeight: '60vh', overflowY: 'auto' }}
-              >
-                {records.checkouts.length === 0 ? (
-                  <p className="text-muted">No records</p>
-                ) : (
-                  records.checkouts.map((item) => (
-                    <div 
-                      key={`checkout-${item.staffId}-${item.scanDate}`} 
-                      className="mb-2 pb-2 border-bottom"
-                    >
-                      <strong>{item.staffId}</strong>
-                      <br />
-                      <small className="text-muted">
-                        {new Date(item.scanDate).toLocaleString()}
-                      </small>
-                    </div>
-                  ))
-                )}
+              <div className="card-body p-0">
+                <div className="list-group">
+                  {checkouts.length === 0 ? (
+                    <div className="list-group-item">無記錄</div>
+                  ) : (
+                    checkouts.map((item) => (
+                      <div key={item.id} className="list-group-item">
+                        <div className="d-flex justify-content-between">
+                          <div>
+                            <strong>
+                              {item.staff_id?.fname} {item.staff_id?.lname}
+                            </strong>
+                            <br />
+                            <small className="text-muted">ID: {item.staff_id?.id}</small>
+                          </div>
+                          <small className="text-muted">
+                            {new Date(item.createdAt).toLocaleString()}
+                          </small>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Checkrecords
+const mapStateToProps = ({ authUser }) => ({
+  currentUser: authUser.currentUser
+});
+
+export default injectIntl(connect(mapStateToProps)(CheckRecord));

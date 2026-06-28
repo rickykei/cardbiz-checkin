@@ -47,5 +47,12 @@ const data = [
     to: `${adminRoot}/check/checkout`,
     roles: [UserRole.Admin,UserRole.Editor] 
   },
+   {
+    id: 'checkrecords',
+    icon: 'simple-icon-wallet',
+    label: 'menu.style.checkrecords',
+    to: `${adminRoot}/check/checkrecords`,
+    roles: [UserRole.Admin,UserRole.Editor] 
+  },
 ];
 export default data;

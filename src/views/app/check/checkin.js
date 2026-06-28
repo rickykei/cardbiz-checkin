@@ -24,10 +24,10 @@ function AES_DECRYPT(encryptedText) {
   }
 }
 
-const Checkin = ({ intl, match,currentUser}) => {
+const Checkin = ({ intl, match, currentUser }) => {
   const videoRef = useRef(null)
   const readerRef = useRef(null)
-  const { messages } = intl; 
+  const { messages } = intl;
   const [scanning, setScanning] = useState(true)
   const [msg, setMsg] = useState(null)
   const [isError, setIsError] = useState(false)
@@ -54,7 +54,11 @@ const Checkin = ({ intl, match,currentUser}) => {
         }
       })
 
-      setMsg(res.data?.message || `Check In 成功：${id}`)
+      // 組合姓名顯示
+      const { fname, lname } = res.data;
+      const fullName = `${fname} ${lname}`.trim();
+      
+      setMsg(`Check In 成功：${fullName} (${id})`);
       setIsError(false)
     } catch (err) {
       console.error('打卡失敗', err.response?.data)
@@ -62,7 +66,7 @@ const Checkin = ({ intl, match,currentUser}) => {
       setIsError(true)
       isProcessing.current = false
     }
-  }, [apiUrl])
+  }, [apiUrl, currentUser.companyId])
 
   useEffect(() => {
     if (!scanning) return undefined
@@ -112,7 +116,7 @@ const Checkin = ({ intl, match,currentUser}) => {
   }
 
   return (
-    <div className="container-fluid"  match={match}>
+    <div className="container-fluid" match={match}>
       <div className="row">
         <div className="col-12">
           <div className="page-title-box">
@@ -158,13 +162,13 @@ const Checkin = ({ intl, match,currentUser}) => {
       </div>
     </div>
   )
-} 
-const mapStateToProps = ({  authUser }) => {
-   
+}
+
+const mapStateToProps = ({ authUser }) => {
   const { currentUser } = authUser;
   return {
-    
     currentUser
   };
 };
+
 export default injectIntl(connect(mapStateToProps)(Checkin));

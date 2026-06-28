@@ -54,7 +54,10 @@ const Checkout = ({ intl, match, currentUser }) => {
         }
       })
 
-      setMsg(res.data?.message || `Check Out 成功：${id}`)
+      const { fname, lname } = res.data;
+      const fullName = `${fname} ${lname}`.trim();
+      
+      setMsg(`Check Out 成功：${fullName} (${id})`);
       setIsError(false)
     } catch (err) {
       console.error('簽退失敗', err.response?.data)
