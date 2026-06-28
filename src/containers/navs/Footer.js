@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="container-fluid">
           <Row>
             <Colxx xxs="12" sm="6">
-              <p className="mb-0 text-muted">NFC Touch 2024 V4.1</p>
+              <p className="mb-0 text-muted">NFC Touch 2026 V6.0</p>
             </Colxx>
             
           </Row>
