@@ -36,47 +36,50 @@ const Checkout = ({ intl, match, currentUser }) => {
   const [staffId, setStaffId] = useState('')
 
   const isProcessing = useRef(false)
+  const lastStaffId = useRef(null)
   const apiUrl = `${servicePath2}/checkin/out`
 
   const handleScan = useCallback(async (id) => {
     if (!id) return
 
+    if (id === lastStaffId.current) {
+      isProcessing.current = false
+      return
+    }
+    lastStaffId.current = id
+
     try {
       const token = localStorage.getItem('token')
-
       const res = await axios.post(apiUrl, {
         staffId: id,
         companyId: currentUser.companyId,
         scanDate: new Date()
       }, {
-        headers: {
-          token
-        }
+        headers: { token }
       })
 
       const { fname, lname } = res.data;
       const fullName = `${fname} ${lname}`.trim();
-      
       setMsg(`Check Out 成功：${fullName} (${id})`);
       setIsError(false)
     } catch (err) {
       console.error('簽退失敗', err.response?.data)
       setMsg(err.response?.data?.message || '簽退失敗')
       setIsError(true)
+    } finally {
       isProcessing.current = false
     }
   }, [apiUrl, currentUser.companyId])
 
   useEffect(() => {
     if (!scanning) return undefined
-
     const reader = new BrowserMultiFormatReader()
     readerRef.current = reader
 
     reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
       if (isProcessing.current || !result) return
-
       const { text } = result
+
       try {
         const url = new URL(text)
         const key = url.searchParams.get('key')
@@ -85,7 +88,6 @@ const Checkout = ({ intl, match, currentUser }) => {
         isProcessing.current = true
         setFullQrUrl(text)
         setEncryptKey(key)
-
         const decryptedId = AES_DECRYPT(key)
         setStaffId(decryptedId)
 
@@ -98,6 +100,7 @@ const Checkout = ({ intl, match, currentUser }) => {
         }
       } catch (e) {
         console.warn('無效 QR Code', text)
+        isProcessing.current = false
       }
     })
 
@@ -110,6 +113,7 @@ const Checkout = ({ intl, match, currentUser }) => {
     setFullQrUrl('')
     setEncryptKey('')
     setStaffId('')
+    lastStaffId.current = null
     isProcessing.current = false
     setScanning(true)
   }
@@ -128,21 +132,13 @@ const Checkout = ({ intl, match, currentUser }) => {
         <div className="col-md-6 offset-md-3">
           <div className="card">
             <div className="card-body">
-              <video
-                ref={videoRef}
-                className="w-100"
-                playsInline
-                autoPlay
-                muted
-              />
+              <video ref={videoRef} className="w-100" playsInline autoPlay muted />
 
               {fullQrUrl && (
                 <div className="alert alert-info mb-3">
                   <div>{messages['forms.checkout-URL：']} URL：{fullQrUrl}</div>
                   <div>加密 Key：{encryptKey}</div>
-                  <div className="fw-bold text-success">
-                    員工編號：{staffId || '解密失敗'}
-                  </div>
+                  <div className="fw-bold text-success">員工編號：{staffId || '解密失敗'}</div>
                 </div>
               )}
 
@@ -163,11 +159,5 @@ const Checkout = ({ intl, match, currentUser }) => {
   )
 }
 
-const mapStateToProps = ({ authUser }) => {
-  const { currentUser } = authUser;
-  return {
-    currentUser
-  };
-};
-
-export default injectIntl(connect(mapStateToProps)(Checkout));
+const mapStateToProps = ({ authUser }) => ({ currentUser: authUser.currentUser })
+export default injectIntl(connect(mapStateToProps)(Checkout))

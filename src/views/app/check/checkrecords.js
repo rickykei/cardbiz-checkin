@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { servicePath2 } from 'constants/defaultValues';
 import IntlMessages from 'helpers/IntlMessages';
@@ -11,7 +11,8 @@ const CheckRecord = ({ currentUser, intl }) => {
   const [checkouts, setCheckouts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRecords = async () => {
+  // 抓取数据（用 useCallback 保证依赖稳定）
+  const fetchRecords = useCallback(async () => {
     if (!currentUser?.companyId) return;
 
     try {
@@ -19,18 +20,25 @@ const CheckRecord = ({ currentUser, intl }) => {
         companyId: currentUser.companyId
       });
 
-      setCheckins(res.data.checkins || []);
-      setCheckouts(res.data.checkouts || []);
+      // 只取最近 10 条
+      setCheckins((res.data.checkins || []).slice(0, 10));
+      setCheckouts((res.data.checkouts || []).slice(0, 10));
     } catch (err) {
       console.error('載入記錄失敗', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser?.companyId]);
 
+  // 初始加载 + 定时每 10 秒刷新一次
   useEffect(() => {
     fetchRecords();
-  }, [currentUser]);
+    const interval = setInterval(() => {
+      fetchRecords();
+    }, 10000); // 10 秒更新一次
+
+    return () => clearInterval(interval);
+  }, [fetchRecords]);
 
   return (
     <div className="container-fluid">
@@ -38,7 +46,7 @@ const CheckRecord = ({ currentUser, intl }) => {
         <div className="col-12">
           <div className="page-title-box">
             <h4 className="page-title">
-              <IntlMessages id="pages.checkrecord" /> 打卡記錄
+              <IntlMessages id="pages.checkrecord" /> 打卡記錄（最近10筆）
             </h4>
           </div>
         </div>
