@@ -3,7 +3,6 @@ import axios from 'axios'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import CryptoJS from 'crypto-js'
 
-// 對應你前端加密函數的「標準解密」
 function AES_DECRYPT(encryptedText) {
   try {
     const bytes = CryptoJS.AES.decrypt(
@@ -34,56 +33,66 @@ const Checkin = () => {
 
   const isProcessing = useRef(false)
 
+  // 確保 handleScan 內部所有路徑都沒有任何 return 回傳值
   const handleScan = useCallback(async (id) => {
-    if (isProcessing.current || !id) return
-    isProcessing.current = true
-
-    try {
-      await axios.post('/api/checkin/in', {
-        staffId: id,
-        scanDate: new Date()
-      })
-      setMsg(`Check In 成功：${id}`)
-      setIsError(false)
-    } catch (err) {
-      setMsg('打卡失敗')
-      setIsError(true)
+    if (id) {
+      try {
+        await axios.post('/api/checkin/in', {
+          staffId: id,
+          scanDate: new Date()
+        })
+        setMsg(`Check In 成功：${id}`)
+        setIsError(false)
+      } catch (err) {
+        setMsg('打卡失敗')
+        setIsError(true)
+        isProcessing.current = false // 打卡失敗時解鎖，允許重新嘗試
+      }
     }
-
-    setTimeout(() => {
-      isProcessing.current = false
-    }, 2000)
   }, [])
 
   useEffect(() => {
-    let reader = null
-
-    if (navigator.mediaDevices && scanning) {
-      reader = new BrowserMultiFormatReader()
-      readerRef.current = reader
-
-      reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
-        if (result) {
-          const { text } = result
-          setFullQrUrl(text)
-
-          const url = new URL(text)
-          const key = url.searchParams.get('key') ?? ''
-          setEncryptKey(key)
-
-          if (key) {
-            const decryptedId = AES_DECRYPT(key)
-            setStaffId(decryptedId)
-            if (decryptedId) handleScan(decryptedId)
-          }
-        }
-      })
+    if (!scanning) {
+      return undefined // 明確回傳 undefined，與底下的清除函式 return 保持一致的 return 結構
     }
 
-    return () => {
-      if (readerRef.current) {
-        readerRef.current.reset()
+    const reader = new BrowserMultiFormatReader()
+    readerRef.current = reader
+
+    reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+      // Callback 內部完全不用 return 做流程控制，改用 if 巢狀判斷
+      if (!isProcessing.current && result) {
+        const { text } = result
+        
+        try {
+          const url = new URL(text)
+          const key = url.searchParams.get('key') || ''
+          
+          if (key) {
+            isProcessing.current = true // 鎖定狀態，避免重複觸發
+            setFullQrUrl(text)
+            setEncryptKey(key)
+
+            const decryptedId = AES_DECRYPT(key)
+            setStaffId(decryptedId)
+
+            if (decryptedId) {
+              handleScan(decryptedId)
+            } else {
+              setMsg('無效的員工代碼（解密失敗）')
+              setIsError(true)
+              isProcessing.current = false // 解密失敗就解鎖
+            }
+          }
+        } catch (urlError) {
+          console.warn('掃描到的內容不是合法的 URL:', text)
+        }
       }
+    })
+
+    // useEffect 最終回傳清除函式
+    return () => {
+      reader.reset()
     }
   }, [scanning, handleScan])
 
@@ -111,17 +120,13 @@ const Checkin = () => {
         <div className="col-md-6 offset-md-3">
           <div className="card">
             <div className="card-body">
-              {scanning && (
-                <div className="bg-dark p-1 border rounded mb-3">
-                  <video
-                    ref={videoRef}
-                    className="w-100"
-                    playsInline
-                    autoPlay
-                    muted
-                  />
-                </div>
-              )}
+              <video
+                ref={videoRef}
+                className="w-100"
+                playsInline
+                autoPlay
+                muted
+              />
 
               {fullQrUrl && (
                 <div className="alert alert-info mb-3">
@@ -140,7 +145,7 @@ const Checkin = () => {
               )}
 
               <button type="button" className="btn btn-primary" onClick={resetScan}>
-                Scan Again
+                重新掃描
               </button>
             </div>
           </div>
