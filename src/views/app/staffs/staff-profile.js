@@ -21,7 +21,7 @@ import classnames from 'classnames';
 import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 function AES_ENCRYPT(text, secretKey) {
-  const encrypted = CryptoJS.AES.encrypt(text,secretKey ,{
+  const encrypted = CryptoJS.AES.encrypt(text,'12345678123456781234567812345678' ,{
    mode: CryptoJS.mode.CBC,
    padding: CryptoJS.pad.Pkcs7
  }).toString();

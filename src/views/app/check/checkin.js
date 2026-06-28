@@ -1,18 +1,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import axios from 'axios'
 import { BrowserMultiFormatReader } from '@zxing/library'
-import * as CryptoJS from 'crypto-js';
+import CryptoJS from 'crypto-js'
 
-// 專用解密：直接解你呢組
-// U2FsdGVkX18TI5NhBcqK3wH/JdD65NHAZm59F1ju67NUoJr9/w3TL1Ep/mqixlTC
-// → 6a15a72fe5b50d06026cc54d
-function decrypt(text, secretKey) {
-  const decrypted = CryptoJS.AES.decrypt(text,secretKey ,{
-   mode: CryptoJS.mode.CBC,
-   padding: CryptoJS.pad.Pkcs7
- }).toString();
- return decrypted;
-} 
+// 對應你前端加密函數的「標準解密」
+function AES_DECRYPT(encryptedText) {
+  try {
+    const bytes = CryptoJS.AES.decrypt(
+      encryptedText,
+      '12345678123456781234567812345678',
+      {
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      }
+    )
+    return bytes.toString(CryptoJS.enc.Utf8)
+  } catch (e) {
+    console.error('解密失敗', e)
+    return ''
+  }
+}
 
 const Checkin = () => {
   const videoRef = useRef(null)
@@ -60,18 +67,14 @@ const Checkin = () => {
           const { text } = result
           setFullQrUrl(text)
 
-          const query = text.split('?')[1] ?? ''
-          const params = new URLSearchParams(query)
-          const key = params.get('key') ?? ''
+          const url = new URL(text)
+          const key = url.searchParams.get('key') ?? ''
           setEncryptKey(key)
 
           if (key) {
-            const decryptedId =encodeURIComponent(decrypt(key,'12345678123456781234567812345678'))
-            console.log('解密結果：', decryptedId)
+            const decryptedId = AES_DECRYPT(key)
             setStaffId(decryptedId)
-            if (decryptedId) {
-              handleScan(decryptedId)
-            }
+            if (decryptedId) handleScan(decryptedId)
           }
         }
       })
@@ -125,7 +128,7 @@ const Checkin = () => {
                   <div>URL：{fullQrUrl}</div>
                   <div>加密 Key：{encryptKey}</div>
                   <div className="fw-bold text-success">
-                    員工編號：{staffId}
+                    員工編號：{staffId || '解密失敗'}
                   </div>
                 </div>
               )}
