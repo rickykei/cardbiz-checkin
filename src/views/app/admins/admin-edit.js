@@ -326,6 +326,12 @@ const AdminPage = ({ intl, match, currentUser }) => {
   const downloadStaffAWExcel = `${servicePath2}/aw_counter/downloadStaffAWExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
   const downloadStaffMobileSiteExcel = `${servicePath2}/mobilesite_counter/downloadStaffMobileSiteExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
   const downloadStaffLinkExcel = `${servicePath2}/batch_upload/downloadStaffLinkExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
+  const downloadStaffCheckinExcel = `${servicePath2}/checkin/download_checkin?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
+  const downloadStaffCheckoutExcel = `${servicePath2}/checkin/download_checkout?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
+
+
+
+
 
   const updateCompany = () => {
 
@@ -711,9 +717,38 @@ const AdminPage = ({ intl, match, currentUser }) => {
                         <IntlMessages id="cards.tab-admin-log7" />
                       </NavLink>
                     </NavItem>
-
-                  </Nav>
-
+                  <NavItem>
+                      <NavLink
+                        to="#"
+                        location={{}}
+                        className={classnames({
+                          active: activeFirstTab === '8',
+                          'nav-link': true,
+                        })}
+                        onClick={() => {
+                          setActiveFirstTab('8');
+                        }}
+                      >
+                        <IntlMessages id="cards.tab-admin-log8" />
+                      </NavLink>
+                    </NavItem>
+                  
+                <NavItem>
+                      <NavLink
+                        to="#"
+                        location={{}}
+                        className={classnames({
+                          active: activeFirstTab === '9',
+                          'nav-link': true,
+                        })}
+                        onClick={() => {
+                          setActiveFirstTab('9');
+                        }}
+                      >
+                        <IntlMessages id="cards.tab-admin-log9" />
+                      </NavLink>
+                    </NavItem>
+              </Nav>
 
                 </CardHeader>
 
@@ -799,7 +834,29 @@ const AdminPage = ({ intl, match, currentUser }) => {
                       </Colxx>
                     </Row>
                   </TabPane>
-
+                <TabPane tabId="8">
+                    <Row>
+                      <Colxx sm="12">
+                        <CardBody>
+                          <a href={downloadStaffCheckinExcel}><Button color="primary" className="mt-4" >
+                            <IntlMessages id="forms.download_staff_checkin_excel" />
+                          </Button></a>
+                        </CardBody>
+                      </Colxx>
+                    </Row>
+                  </TabPane>
+                
+                  <TabPane tabId="9">
+                    <Row>
+                      <Colxx sm="12">
+                        <CardBody>
+                          <a href={downloadStaffCheckoutExcel}><Button color="primary" className="mt-4" >
+                            <IntlMessages id="forms.download_staff_checkout_excel" />
+                          </Button></a>
+                        </CardBody>
+                      </Colxx>
+                    </Row>
+                  </TabPane>
                 </TabContent>
               </Card>
             </Colxx>
