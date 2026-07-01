@@ -319,13 +319,7 @@ const AdminPage = ({ intl, match, currentUser }) => {
   const history = useHistory();
   const [activeFirstTab, setActiveFirstTab] = useState('1');
   const [activeSecondTab, setActiveSecondTab] = useState('1');
-  const downloadStaffLogExcel = `${servicePath2}/staff_logs/downloadStaffLogExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
-  const downloadStaffProfileExcel = `${servicePath2}/profile_counter/downloadStaffLogExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
-  const downloadStaffVcfExcel = `${servicePath2}/vcf_counter/downloadStaffLogExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
-  const downloadStaffGWExcel = `${servicePath2}/gw_counter/downloadStaffGWExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
-  const downloadStaffAWExcel = `${servicePath2}/aw_counter/downloadStaffAWExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
-  const downloadStaffMobileSiteExcel = `${servicePath2}/mobilesite_counter/downloadStaffMobileSiteExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
-  const downloadStaffLinkExcel = `${servicePath2}/batch_upload/downloadStaffLinkExcel?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
+
   const downloadStaffCheckinExcel = `${servicePath2}/checkin/download_checkin?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
   const downloadStaffCheckoutExcel = `${servicePath2}/checkin/download_checkout?company_id=${currentUser.companyId}&uid=${currentUser.uid}`;
 
@@ -611,7 +605,8 @@ const AdminPage = ({ intl, match, currentUser }) => {
               <Card className="mb-4">
                 <CardHeader>
                   <Nav tabs className="card-header-tabs ">
-                    <NavItem>
+                   
+                  <NavItem>
                       <NavLink
                         to="#"
                         location={{}}
@@ -626,7 +621,8 @@ const AdminPage = ({ intl, match, currentUser }) => {
                         <IntlMessages id="cards.tab-admin-log1" />
                       </NavLink>
                     </NavItem>
-                    <NavItem>
+                  
+                <NavItem>
                       <NavLink
                         to="#"
                         location={{}}
@@ -641,200 +637,14 @@ const AdminPage = ({ intl, match, currentUser }) => {
                         <IntlMessages id="cards.tab-admin-log2" />
                       </NavLink>
                     </NavItem>
-                    <NavItem>
-                      <NavLink
-                        to="#"
-                        location={{}}
-                        className={classnames({
-                          active: activeFirstTab === '3',
-                          'nav-link': true,
-                        })}
-                        onClick={() => {
-                          setActiveFirstTab('3');
-                        }}
-                      >
-                        <IntlMessages id="cards.tab-admin-log3" />
-                      </NavLink>
-                    </NavItem>
-                    <NavItem>
-                      <NavLink
-                        to="#"
-                        location={{}}
-                        className={classnames({
-                          active: activeFirstTab === '4',
-                          'nav-link': true,
-                        })}
-                        onClick={() => {
-                          setActiveFirstTab('4');
-                        }}
-                      >
-                        <IntlMessages id="cards.tab-admin-log4" />
-                      </NavLink>
-                    </NavItem>
-                    <NavItem>
-                      <NavLink
-                        to="#"
-                        location={{}}
-                        className={classnames({
-                          active: activeFirstTab === '5',
-                          'nav-link': true,
-                        })}
-                        onClick={() => {
-                          setActiveFirstTab('5');
-                        }}
-                      >
-                        <IntlMessages id="cards.tab-admin-log5" />
-                      </NavLink>
-                    </NavItem>
-                    <NavItem>
-                      <NavLink
-                        to="#"
-                        location={{}}
-                        className={classnames({
-                          active: activeFirstTab === '6',
-                          'nav-link': true,
-                        })}
-                        onClick={() => {
-                          setActiveFirstTab('6');
-                        }}
-                      >
-                        <IntlMessages id="cards.tab-admin-log6" />
-                      </NavLink>
-                    </NavItem>
-
-                    <NavItem>
-                      <NavLink
-                        to="#"
-                        location={{}}
-                        className={classnames({
-                          active: activeFirstTab === '7',
-                          'nav-link': true,
-                        })}
-                        onClick={() => {
-                          setActiveFirstTab('7');
-                        }}
-                      >
-                        <IntlMessages id="cards.tab-admin-log7" />
-                      </NavLink>
-                    </NavItem>
-                  <NavItem>
-                      <NavLink
-                        to="#"
-                        location={{}}
-                        className={classnames({
-                          active: activeFirstTab === '8',
-                          'nav-link': true,
-                        })}
-                        onClick={() => {
-                          setActiveFirstTab('8');
-                        }}
-                      >
-                        <IntlMessages id="cards.tab-admin-log8" />
-                      </NavLink>
-                    </NavItem>
-                  
-                <NavItem>
-                      <NavLink
-                        to="#"
-                        location={{}}
-                        className={classnames({
-                          active: activeFirstTab === '9',
-                          'nav-link': true,
-                        })}
-                        onClick={() => {
-                          setActiveFirstTab('9');
-                        }}
-                      >
-                        <IntlMessages id="cards.tab-admin-log9" />
-                      </NavLink>
-                    </NavItem>
               </Nav>
 
                 </CardHeader>
 
                 <TabContent activeTab={activeFirstTab}>
-                  <TabPane tabId="1">
-                    <Row>
-                      <Colxx sm="12">
-                        <CardBody>
-
-                          <a href={downloadStaffLogExcel}><Button color="primary" className="mt-4" >
-                            <IntlMessages id="forms.download_staff_log_excel" />
-                          </Button></a>
-                        </CardBody>
-                      </Colxx>
-                    </Row>
-                  </TabPane>
-                  <TabPane tabId="2">
-                    <Row>
-                      <Colxx sm="12">
-                        <CardBody>
-
-                          <a href={downloadStaffProfileExcel}><Button color="primary" className="mt-4" >
-                            <IntlMessages id="forms.download_staff_profile_excel" />
-                          </Button></a>
-                        </CardBody>
-                      </Colxx>
-                    </Row>
-                  </TabPane>
-                  <TabPane tabId="3">
-                    <Row>
-                      <Colxx sm="12">
-                        <CardBody>
-                          <a href={downloadStaffVcfExcel}><Button color="primary" className="mt-4" >
-                            <IntlMessages id="forms.download_staff_vcf_excel" />
-                          </Button></a>
-
-                        </CardBody>
-                      </Colxx>
-                    </Row>
-                  </TabPane>
-                  <TabPane tabId="4">
-                    <Row>
-                      <Colxx sm="12">
-                        <CardBody>
-                          <a href={downloadStaffGWExcel}><Button color="primary" className="mt-4" >
-                            <IntlMessages id="forms.download_staff_gw_excel" />
-                          </Button></a>
-                        </CardBody>
-                      </Colxx>
-                    </Row>
-                  </TabPane>
-                  <TabPane tabId="5">
-                    <Row>
-                      <Colxx sm="12">
-                        <CardBody>
-                          <a href={downloadStaffAWExcel}><Button color="primary" className="mt-4" >
-                            <IntlMessages id="forms.download_staff_aw_excel" />
-                          </Button></a>
-                        </CardBody>
-                      </Colxx>
-                    </Row>
-                  </TabPane>
-                  <TabPane tabId="6">
-                    <Row>
-                      <Colxx sm="12">
-                        <CardBody>
-                          <a href={downloadStaffMobileSiteExcel}><Button color="primary" className="mt-4" >
-                            <IntlMessages id="forms.download_staff_mobilesite_excel" />
-                          </Button></a>
-                        </CardBody>
-                      </Colxx>
-                    </Row>
-                  </TabPane>
-
-                  <TabPane tabId="7">
-                    <Row>
-                      <Colxx sm="12">
-                        <CardBody>
-                          <a href={downloadStaffLinkExcel}><Button color="primary" className="mt-4" >
-                            <IntlMessages id="forms.download_staff_link_excel" />
-                          </Button></a>
-                        </CardBody>
-                      </Colxx>
-                    </Row>
-                  </TabPane>
-                <TabPane tabId="8">
+              
+               
+                <TabPane tabId="1">
                     <Row>
                       <Colxx sm="12">
                         <CardBody>
@@ -846,7 +656,7 @@ const AdminPage = ({ intl, match, currentUser }) => {
                     </Row>
                   </TabPane>
                 
-                  <TabPane tabId="9">
+                  <TabPane tabId="2">
                     <Row>
                       <Colxx sm="12">
                         <CardBody>

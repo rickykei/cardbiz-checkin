@@ -59,7 +59,7 @@ const CheckRecord = ({ currentUser, intl }) => {
           <div className="col-md-6">
             <div className="card mb-4">
               <div className="card-header bg-primary text-white">
-                <h5 className="mb-0">{messages['forms.checkin-records']} - Check IN</h5>
+                <h5 className="mb-0">{messages['forms.checkin-records']}Check-in</h5>
               </div>
               <div className="card-body p-0">
                 <div className="list-group">
@@ -91,7 +91,7 @@ const CheckRecord = ({ currentUser, intl }) => {
           <div className="col-md-6">
             <div className="card">
               <div className="card-header bg-warning text-dark">
-                <h5 className="mb-0">{messages['forms.checkout-records']} - Check OUT</h5>
+                <h5 className="mb-0">{messages['forms.checkout-records']}Check-out</h5>
               </div>
               <div className="card-body p-0">
                 <div className="list-group">

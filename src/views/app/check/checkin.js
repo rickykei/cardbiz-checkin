@@ -35,6 +35,9 @@ const Checkin = ({ intl, match, currentUser }) => {
   const [encryptKey, setEncryptKey] = useState('')
   const [staffId, setStaffId] = useState('')
 
+  // 鏡頭狀態：environment = 後鏡頭(預設)，user = 前鏡頭
+  const [facingMode, setFacingMode] = useState('environment')
+
   const isProcessing = useRef(false)
   const lastStaffId = useRef(null)
   const apiUrl = `${servicePath2}/checkin/in`
@@ -71,12 +74,20 @@ const Checkin = ({ intl, match, currentUser }) => {
     }
   }, [apiUrl, currentUser.companyId])
 
-  useEffect(() => {
-    if (!scanning) return undefined
+  const startScan = useCallback(() => {
+    if (!scanning) return
+    if (readerRef.current) {
+      readerRef.current.reset()
+    }
+
     const reader = new BrowserMultiFormatReader()
     readerRef.current = reader
 
-    reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
+    const constraints = {
+      video: { facingMode }
+    }
+
+    reader.decodeFromConstraints(constraints, videoRef.current, (result) => {
       if (isProcessing.current || !result) return
       const { text } = result
 
@@ -103,9 +114,14 @@ const Checkin = ({ intl, match, currentUser }) => {
         isProcessing.current = false
       }
     })
+  }, [scanning, facingMode, handleScan])
 
-    return () => reader.reset()
-  }, [scanning, handleScan])
+  useEffect(() => {
+    startScan()
+    return () => {
+      if (readerRef.current) readerRef.current.reset()
+    }
+  }, [startScan])
 
   const resetScan = () => {
     setMsg(null)
@@ -116,6 +132,11 @@ const Checkin = ({ intl, match, currentUser }) => {
     lastStaffId.current = null
     isProcessing.current = false
     setScanning(true)
+  }
+
+  // 切換前後鏡頭
+  const toggleCamera = () => {
+    setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')
   }
 
   return (
@@ -148,9 +169,18 @@ const Checkin = ({ intl, match, currentUser }) => {
                 </div>
               )}
 
-              <button type="button" className="btn btn-primary" onClick={resetScan}>
-                重新掃描
-              </button>
+              <div className="d-flex gap-2 mt-3">
+                <button type="button" className="btn btn-primary flex-grow-1" onClick={resetScan}>
+                  重新掃描
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary flex-grow-1" 
+                  onClick={toggleCamera}
+                >
+                  {facingMode === 'environment' ? '切換前鏡頭' : '切換後鏡頭'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
