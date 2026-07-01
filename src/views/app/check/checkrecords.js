@@ -11,18 +11,22 @@ const CheckRecord = ({ currentUser, intl }) => {
   const [checkouts, setCheckouts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 抓取数据（用 useCallback 保证依赖稳定）
   const fetchRecords = useCallback(async () => {
     if (!currentUser?.companyId) return;
 
     try {
-      const res = await axios.post(`${servicePath2}/checkin/records`, {
-        companyId: currentUser.companyId
+      const resIn = await axios.post(`${servicePath2}/checkin/records`, {
+        companyId: currentUser.companyId,
+        type: 'in'
       });
 
-      // 只取最近 10 条
-      setCheckins((res.data.checkins || []).slice(0, 10));
-      setCheckouts((res.data.checkouts || []).slice(0, 10));
+      const resOut = await axios.post(`${servicePath2}/checkin/records`, {
+        companyId: currentUser.companyId,
+        type: 'out'
+      });
+
+      setCheckins((resIn.data || []).slice(0, 10));
+      setCheckouts((resOut.data || []).slice(0, 10));
     } catch (err) {
       console.error('載入記錄失敗', err);
     } finally {
@@ -30,13 +34,9 @@ const CheckRecord = ({ currentUser, intl }) => {
     }
   }, [currentUser?.companyId]);
 
-  // 初始加载 + 定时每 10 秒刷新一次
   useEffect(() => {
     fetchRecords();
-    const interval = setInterval(() => {
-      fetchRecords();
-    }, 10000); // 10 秒更新一次
-
+    const interval = setInterval(fetchRecords, 10000);
     return () => clearInterval(interval);
   }, [fetchRecords]);
 
@@ -59,7 +59,7 @@ const CheckRecord = ({ currentUser, intl }) => {
           <div className="col-md-6">
             <div className="card mb-4">
               <div className="card-header bg-primary text-white">
-                <h5 className="mb-0">{messages['forms.checkin-records']}Check-in</h5>
+                <h5 className="mb-0">{messages['forms.checkin-records']} Check-in</h5>
               </div>
               <div className="card-body p-0">
                 <div className="list-group">
@@ -67,14 +67,19 @@ const CheckRecord = ({ currentUser, intl }) => {
                     <div className="list-group-item">無記錄</div>
                   ) : (
                     checkins.map((item) => (
-                      <div key={item.id} className="list-group-item">
+                      <div 
+                        key={`in-${item.staff_id?.fname}-${item.createdAt}`} 
+                        className="list-group-item"
+                      >
                         <div className="d-flex justify-content-between">
                           <div>
                             <strong>
                               {item.staff_id?.fname} {item.staff_id?.lname}
                             </strong>
                             <br />
-                            <small className="text-muted">ID: {item.staff_id?.id}</small>
+                            <small className="text-muted">
+                              員工資料
+                            </small>
                           </div>
                           <small className="text-muted">
                             {new Date(item.createdAt).toLocaleString()}
@@ -91,7 +96,7 @@ const CheckRecord = ({ currentUser, intl }) => {
           <div className="col-md-6">
             <div className="card">
               <div className="card-header bg-warning text-dark">
-                <h5 className="mb-0">{messages['forms.checkout-records']}Check-out</h5>
+                <h5 className="mb-0">{messages['forms.checkout-records']} Check-out</h5>
               </div>
               <div className="card-body p-0">
                 <div className="list-group">
@@ -99,14 +104,19 @@ const CheckRecord = ({ currentUser, intl }) => {
                     <div className="list-group-item">無記錄</div>
                   ) : (
                     checkouts.map((item) => (
-                      <div key={item.id} className="list-group-item">
+                      <div 
+                        key={`out-${item.staff_id?.fname}-${item.createdAt}`} 
+                        className="list-group-item"
+                      >
                         <div className="d-flex justify-content-between">
                           <div>
                             <strong>
                               {item.staff_id?.fname} {item.staff_id?.lname}
                             </strong>
                             <br />
-                            <small className="text-muted">ID: {item.staff_id?.id}</small>
+                            <small className="text-muted">
+                              員工資料
+                            </small>
                           </div>
                           <small className="text-muted">
                             {new Date(item.createdAt).toLocaleString()}
